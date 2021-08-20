@@ -4,10 +4,9 @@ import game.score.Frame
 import game.score.FrameBoard
 import game.score.ScoreCalculator
 
-class Game {
+class Game(private val scoreCalculator: ScoreCalculator) {
 
     private var frameBoard: FrameBoard
-    private val scoreCalculator = ScoreCalculator()
 
     init {
         val frames = mutableListOf<Frame>()

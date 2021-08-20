@@ -1,6 +1,8 @@
 package game.score
 
-class ScoreCalculator {
+import game.logic.BowlingRules
+
+class ScoreCalculator(private val bowlingRules: BowlingRules) {
 
     fun calculate(frameBoard: FrameBoard, numberOfKnockedDownPins: Int): FrameBoard {
         setCurrentRoll(frameBoard, numberOfKnockedDownPins)
@@ -24,10 +26,10 @@ class ScoreCalculator {
         for (i in 0..frameBoard.currentFrame) {
             frameBoard.frames[i].score = frameBoard.frames[i].rolls.sum()
 
-            if (isNotLastFrame(i) && hasAtLeastOneRoll(frameBoard.frames[i + 1])) {
-                if (isStrike(frameBoard.frames[i])) {
+            if (!bowlingRules.isLastFrame(i) && bowlingRules.hasAtLeastOneRoll(frameBoard.frames[i + 1])) {
+                if (bowlingRules.isStrike(frameBoard.frames[i])) {
                     calculateStrikeBonus(frameBoard, i)
-                } else if (isSpare(frameBoard.frames[i])) {
+                } else if (bowlingRules.isSpare(frameBoard.frames[i])) {
                     calculateSpareBonus(frameBoard, i)
                 }
             }
@@ -35,8 +37,12 @@ class ScoreCalculator {
     }
 
     private fun calculateStrikeBonus(frameBoard: FrameBoard, i: Int) {
-        if (i <= 7 && hasAtLeastOneRoll(frameBoard.frames[i + 2]) && isStrike(frameBoard.frames[i + 1])) {
-            frameBoard.frames[i].score += frameBoard.frames[i + 1].rolls[0] + frameBoard.frames[i + 2].rolls[0]
+        if (i <= 7 && bowlingRules.isStrike(frameBoard.frames[i + 1])) {
+            if (bowlingRules.hasAtLeastOneRoll(frameBoard.frames[i + 2])) {
+                frameBoard.frames[i].score += frameBoard.frames[i + 1].rolls[0] + frameBoard.frames[i + 2].rolls[0]
+            } else {
+                frameBoard.frames[i].score += frameBoard.frames[i + 1].rolls[0]
+            }
         } else if (frameBoard.frames[i + 1].rolls.size >= 2) {
             frameBoard.frames[i].score += frameBoard.frames[i + 1].rolls[0] + frameBoard.frames[i + 1].rolls[1]
         }
@@ -50,7 +56,7 @@ class ScoreCalculator {
         frameBoard: FrameBoard,
         numberOfKnockedDownPins: Int
     ) {
-        if (isLastFrame(frameBoard)) {
+        if (bowlingRules.isLastFrame(frameBoard.currentFrame)) {
             setLastFrame(frameBoard, numberOfKnockedDownPins)
         } else {
             setNormalFrame(frameBoard, numberOfKnockedDownPins)
@@ -60,8 +66,8 @@ class ScoreCalculator {
     private fun setLastFrame(frameBoard: FrameBoard, numberOfKnockedDownPins: Int) {
         if (
             frameBoard.currentRoll <= 1 ||
-            isSpare(frameBoard.frames[frameBoard.currentFrame]) ||
-            isStrike(frameBoard.frames[frameBoard.currentFrame])
+            bowlingRules.isSpare(frameBoard.frames[frameBoard.currentFrame]) ||
+            bowlingRules.isStrike(frameBoard.frames[frameBoard.currentFrame])
         ) {
             addCurrentRoll(frameBoard, numberOfKnockedDownPins)
             frameBoard.currentRoll++
@@ -77,7 +83,10 @@ class ScoreCalculator {
     private fun setNormalFrame(frameBoard: FrameBoard, numberOfKnockedDownPins: Int) {
         addCurrentRoll(frameBoard, numberOfKnockedDownPins)
 
-        if (isStrike(frameBoard.frames[frameBoard.currentFrame]) || isLastRollForNormalFrame(frameBoard.currentRoll)) {
+        if (
+            bowlingRules.isStrike(frameBoard.frames[frameBoard.currentFrame]) ||
+            bowlingRules.isLastRollForNormalFrame(frameBoard.currentRoll)
+        ) {
             frameBoard.currentFrame++
             frameBoard.currentRoll = 0
         } else {
@@ -88,16 +97,4 @@ class ScoreCalculator {
     private fun addCurrentRoll(frameBoard: FrameBoard, numberOfKnockedDownPins: Int) {
         frameBoard.frames[frameBoard.currentFrame].rolls += numberOfKnockedDownPins
     }
-
-    private fun isLastRollForNormalFrame(amountOfRolls: Int) = amountOfRolls >= 1
-
-    private fun isStrike(frame: Frame) = frame.rolls[0] == 10
-
-    private fun isSpare(frame: Frame) = frame.rolls.size >= 2 && frame.rolls[0] + frame.rolls[1] == 10
-
-    private fun hasAtLeastOneRoll(frame: Frame) = frame.rolls.isNotEmpty()
-
-    private fun isNotLastFrame(frameId: Int) = frameId <= 8
-
-    private fun isLastFrame(frameBoard: FrameBoard) = frameBoard.currentFrame == 9
 }

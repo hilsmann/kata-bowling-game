@@ -1,10 +1,15 @@
 package main
 
+import game.logic.BowlingRules
 import game.logic.Game
+import game.score.ScoreCalculator
 import player.Player
 
 fun main() {
-    val game = Game()
+
+    val bowlingRules = BowlingRules()
+    val scoreCalculator = ScoreCalculator(bowlingRules)
+    val game = Game(scoreCalculator)
 
     val player = Player(game)
 

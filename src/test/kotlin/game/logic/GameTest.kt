@@ -2,19 +2,15 @@ package game.logic
 
 import game.score.ScoreCalculator
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
-import io.mockk.mockkClass
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class GameTest {
 
-    @InjectMockKs
-    private val game = Game()
+    private val scoreCalculator = mockk<ScoreCalculator>()
 
-    private val scoreCalculator = mockk<ScoreCalculator>(relaxed = true)
+    private val game = Game(scoreCalculator)
 
     @Test
     fun `Start a new Game and get the score`() {
